@@ -32,6 +32,12 @@ def sim_game(bracket, round, region, slot, norm_fit):
         base_slot = slot-slot_remainder
         base_slot += region_offset[region]
         possible_slots = np.arange(base_slot,base_slot+slot_divisor)
+    elif round == 6:
+        if slot+region_offset[region] < 64:
+            possible_slots = np.arange(0,64)
+        else:
+            possible_slots = np.arange(64,128)
+    else: possible_slots = np.arange(0,128)
     
     # Find team1 and team2
     team1idx = None
@@ -82,7 +88,7 @@ def sim_game(bracket, round, region, slot, norm_fit):
 
 def sim_playin(bracket, norm_fit):
 
-    print ('Round #1 (First Four)\n')
+    print ('\n------Round #1 (First Four)------\n')
 
     team_idxs = bracket.index.values
 
@@ -93,3 +99,37 @@ def sim_playin(bracket, norm_fit):
             region = team['team_region']
             slot -= region_offset[region]
             bracket = sim_game(bracket, 1, region, slot, norm_fit)
+
+    return bracket
+
+
+def sim_round(bracket, round, norm_fit):
+
+    if round == 1:
+        bracket = sim_playin(bracket, norm_fit)
+    else:
+        if round < 6:
+            print ('\n------------Round #{}------------\n'.format(round))
+        elif round < 7:
+            print ('\n------------Final Four------------\n')
+
+        team_idxs = bracket.index.values
+        round_idx = 'rd'+str(round)+'_win'
+
+        for team_idx in team_idxs:
+            team = bracket.loc[team_idx]
+            if (team[round_idx] < 1.0) and (team[round_idx] > 0.0):
+                slot = team['team_slot']
+                region = team['team_region']
+                slot -= region_offset[region]
+                bracket = sim_game(bracket, round, region, slot, norm_fit)
+
+    return bracket
+
+
+def sim_bracket(bracket, norm_fit):
+
+    for round in np.arange(1,8):
+        bracket = sim_round(bracket, round, norm_fit)
+
+    return bracket

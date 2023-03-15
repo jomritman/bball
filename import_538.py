@@ -54,7 +54,9 @@ def import_538(fn, plot_flag=False):
 
     men_idxs = np.where(teams['gender'].values=='mens')[0]
     mens_teams = teams.loc[men_idxs]
+    mens_teams.index = np.arange(0,mens_teams.shape[0])
     women_idxs = np.where(teams['gender'].values=='womens')[0]
     womens_teams = teams.loc[women_idxs]
-
+    womens_teams.index = np.arange(0,womens_teams.shape[0])
+    
     return mens_teams, womens_teams, norm_fit
