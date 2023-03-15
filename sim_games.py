@@ -4,24 +4,26 @@ import matplotlib.pyplot as plt
 import scipy.stats as stats
 from random import random
 
+# Each region offsets slots by known amount
+region_offset = {'South':0,
+                'Greenville 1':0,
+                'East':32,
+                'Seattle 4':32,
+                'West':64,
+                'Seattle 3':64,
+                'Midwest':96,
+                'Greenville 2':96}
+    
+
 def sim_game(bracket, round, region, slot, norm_fit):
 
     team_idxs = bracket.index.values
     round_idx = 'rd'+str(round)+'_win'
 
-    # Each region offsets slots by known amount
-    region_offset = {'South':0,
-                     'Greenville 1':0,
-                     'East':32,
-                     'Seattle 4':32,
-                     'West':64,
-                     'Seattle 3':64,
-                     'Midwest':96,
-                     'Greenville 2':96}
-    
     # Make list of possible slots to find remaining opponent
     if round == 1:
         opp_slot = slot+1 if slot%2 == 0 else slot-1
+        slot += region_offset[region]
         opp_slot += region_offset[region]
         possible_slots = [slot, opp_slot]
     elif round < 6:
@@ -35,12 +37,12 @@ def sim_game(bracket, round, region, slot, norm_fit):
     team1idx = None
     team2idx = None
     team_idx = 0
-    while team1idx == None and team_idx < max(team_idxs):
+    while team1idx == None and team_idx <= max(team_idxs):
         team = bracket.loc[team_idx]
         if (team['team_slot'] in possible_slots) and (team[round_idx] > 0) and (team[round_idx] < 1):
             team1idx = team_idx
         team_idx += 1
-    while team2idx == None and team_idx < max(team_idxs):
+    while team2idx == None and team_idx <= max(team_idxs):
         team = bracket.loc[team_idx]
         if (team['team_slot'] in possible_slots) and (team[round_idx] > 0) and (team[round_idx] < 1):
             team2idx = team_idx
@@ -62,6 +64,8 @@ def sim_game(bracket, round, region, slot, norm_fit):
         winner_idx = team2idx
         loser_idx = team1idx
     bracket.loc[winner_idx,round_idx] = 1.0
+    if round == 1:
+        bracket.loc[loser_idx,'playin_flag'] = 0
     for future_round in np.arange(round,8):
         future_round_idx = 'rd'+str(future_round)+'_win'
         bracket.loc[loser_idx,future_round_idx] = 0.0
@@ -74,3 +78,18 @@ def sim_game(bracket, round, region, slot, norm_fit):
     else: print('')
 
     return bracket
+
+
+def sim_playin(bracket, norm_fit):
+
+    print ('Round #1 (First Four)\n')
+
+    team_idxs = bracket.index.values
+
+    for team_idx in team_idxs:
+        team = bracket.loc[team_idx]
+        if team['playin_flag'] and team['rd1_win'] < 1.0:
+            slot = team['team_slot']
+            region = team['team_region']
+            slot -= region_offset[region]
+            bracket = sim_game(bracket, 1, region, slot, norm_fit)
