@@ -1,21 +1,20 @@
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import scipy.stats as stats
 from random import random
 
 # Each region offsets slots by known amount
 region_offset = {'South':0,
-                'Greenville 1':0,
+                'Albany 1':0,
                 'East':32,
-                'Seattle 4':32,
+                'Albany 2':32,
                 'West':64,
-                'Seattle 3':64,
+                'Portland 1':64,
                 'Midwest':96,
-                'Greenville 2':96}
+                'Portland 2':96}
     
 
-def sim_game(bracket, round, region, slot, norm_fit):
+def sim_game(bracket, round, region, slot, norm_fit, upset_preference = 50.):
 
     team_idxs = bracket.index.values
     round_idx = 'rd'+str(round)+'_win'
@@ -62,7 +61,9 @@ def sim_game(bracket, round, region, slot, norm_fit):
     # Simulate game
     ratings = [team['team_rating'] for team in teams]
     rating_diff = ratings[0] - ratings[1]
-    result = stats.norm(*norm_fit).cdf(rating_diff) > random()
+    prob = stats.norm(*norm_fit).cdf(rating_diff)
+    roll = random()
+    result = prob > roll + (upset_preference/100-.5)*(prob>=.5) + (.5-upset_preference/100)*(prob<.5)
     if result:
         winner_idx = team1idx
         loser_idx = team2idx
@@ -79,14 +80,13 @@ def sim_game(bracket, round, region, slot, norm_fit):
                                          bracket.loc[winner_idx,'team_name'],
                                          bracket.loc[loser_idx,'team_seed'],
                                          bracket.loc[loser_idx,'team_name']),end='')
-    if round < 6:
-        print(' in the {} region'.format(region))
-    else: print('')
+    if round == 7:
+        print('\n\n------{} wins!------\n'.format(bracket.loc[winner_idx,'team_name']))
 
     return bracket
 
 
-def sim_playin(bracket, norm_fit):
+def sim_playin(bracket, norm_fit, upset_preference=50.):
 
     print ('\n------Round #1 (First Four)------\n')
 
@@ -98,38 +98,52 @@ def sim_playin(bracket, norm_fit):
             slot = team['team_slot']
             region = team['team_region']
             slot -= region_offset[region]
-            bracket = sim_game(bracket, 1, region, slot, norm_fit)
+            bracket = sim_game(bracket, 1, region, slot, norm_fit, upset_preference)
+            print('')
 
     return bracket
 
 
-def sim_round(bracket, round, norm_fit):
+def sim_round(bracket, round, norm_fit, upset_preference=50.):
 
     if round == 1:
-        bracket = sim_playin(bracket, norm_fit)
+        bracket = sim_playin(bracket, norm_fit, upset_preference)
     else:
         if round < 6:
             print ('\n------------Round #{}------------\n'.format(round))
         elif round < 7:
-            print ('\n------------Final Four------------\n')
+            print ('\n------------Final Four-----------\n')
 
         team_idxs = bracket.index.values
         round_idx = 'rd'+str(round)+'_win'
 
+        current_region = ''
+        round_started = False
         for team_idx in team_idxs:
             team = bracket.loc[team_idx]
             if (team[round_idx] < 1.0) and (team[round_idx] > 0.0):
                 slot = team['team_slot']
                 region = team['team_region']
                 slot -= region_offset[region]
-                bracket = sim_game(bracket, round, region, slot, norm_fit)
+                if round < 6:
+                    if region != current_region:
+                        if round_started:
+                            print('')
+                        else:
+                            round_started = True
+                        print('{} Region:'.format(region))
+                        current_region = region
+                bracket = sim_game(bracket, round, region, slot, norm_fit, upset_preference)
+                print('')
+                
+    
 
     return bracket
 
 
-def sim_bracket(bracket, norm_fit):
+def sim_bracket(bracket, norm_fit, upset_preference=50.):
 
     for round in np.arange(1,8):
-        bracket = sim_round(bracket, round, norm_fit)
+        bracket = sim_round(bracket, round, norm_fit, upset_preference)
 
     return bracket

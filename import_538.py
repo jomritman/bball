@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+plt.ion()
 import scipy.stats as stats
 
 #fn = 'fivethirtyeight_ncaa_forecasts.csv'
