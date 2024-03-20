@@ -11,7 +11,7 @@ Set upset preference:
 100 = All upsets win
 Recommended setting: 40
 '''
-upset_preference = 40
+upset_preference = 50
 
 men, women, norm_fit = import_538(fn)
 

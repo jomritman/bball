@@ -4,18 +4,24 @@ import scipy.stats as stats
 from random import random
 
 # Each region offsets slots by known amount
-region_offset = {'South':0,
-                'Albany 1':0,
-                'East':32,
-                'Albany 2':32,
-                'West':64,
-                'Portland 1':64,
+region_offset = {'East':0,
+                'West':32,
+                'South':64,
                 'Midwest':96,
-                'Portland 2':96}
+                'Albany 1':0,
+                'Portland 4':32,
+                'Albany 2':64,
+                'Portland 3':96,
+                }
     
 
 def sim_game(bracket, round, region, slot, norm_fit, upset_preference = 50.):
 
+    # Adjust normal distribution using upset preference
+    
+    norm_fit = (norm_fit[0],np.max([0.0001,norm_fit[1]*
+                (upset_preference/np.max([(100-upset_preference),0.00000001]))]))
+    
     team_idxs = bracket.index.values
     round_idx = 'rd'+str(round)+'_win'
 
@@ -63,7 +69,7 @@ def sim_game(bracket, round, region, slot, norm_fit, upset_preference = 50.):
     rating_diff = ratings[0] - ratings[1]
     prob = stats.norm(*norm_fit).cdf(rating_diff)
     roll = random()
-    result = prob > roll + (upset_preference/100-.5)*(prob>=.5) + (.5-upset_preference/100)*(prob<.5)
+    result = prob > roll #+ (upset_preference/100-.5)*(prob>=.5) + (.5-upset_preference/100)*(prob<.5)
     if result:
         winner_idx = team1idx
         loser_idx = team2idx
