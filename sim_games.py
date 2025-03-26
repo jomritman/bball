@@ -4,14 +4,14 @@ import scipy.stats as stats
 from random import random
 
 # Each region offsets slots by known amount
-region_offset = {'East':0,
-                'West':32,
-                'South':64,
+region_offset = {'South':0,
+                'East':32,
+                'West':64,
                 'Midwest':96,
-                'Albany 1':0,
-                'Portland 4':32,
-                'Albany 2':64,
-                'Portland 3':96,
+                'Spokane 1':0,
+                'Birmingham 2':0,
+                'Birmingham 3':0,
+                'Spokane 4':0,
                 }
     
 
@@ -66,7 +66,7 @@ def sim_game(bracket, round, region, slot, norm_fit, upset_preference = 50.):
 
     # Simulate game
     ratings = [team['team_rating'] for team in teams]
-    rating_diff = ratings[0] - ratings[1]
+    rating_diff = float(ratings[0]) - float(ratings[1])
     prob = stats.norm(*norm_fit).cdf(rating_diff)
     roll = random()
     result = prob > roll #+ (upset_preference/100-.5)*(prob>=.5) + (.5-upset_preference/100)*(prob<.5)

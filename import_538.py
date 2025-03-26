@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 plt.ioff()
 import scipy.stats as stats
 
-#fn = 'fivethirtyeight_ncaa_forecasts.csv'
+#fn = 'fivethirtyeight_ncaa_forecasts_25.csv'
 
 def import_538(fn, redo_fit=False, plot_flag=False):
 
